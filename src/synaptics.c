@@ -3218,22 +3218,24 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     if (finger >= FS_TOUCHED && (dx || dy) && !ignore_motion)
         xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
 
-    if (priv->mid_emu_state == MBE_LEFT_CLICK) {
-        post_button_click(pInfo, 1);
-        priv->mid_emu_state = MBE_OFF;
-    }
-    else if (priv->mid_emu_state == MBE_RIGHT_CLICK) {
-        post_button_click(pInfo, 3);
-        priv->mid_emu_state = MBE_OFF;
-    }
+	if (!para->clickpad || finger >= FS_TOUCHED) {
+		if (priv->mid_emu_state == MBE_LEFT_CLICK) {
+			post_button_click(pInfo, 1);
+			priv->mid_emu_state = MBE_OFF;
+		}
+		else if (priv->mid_emu_state == MBE_RIGHT_CLICK) {
+			post_button_click(pInfo, 3);
+			priv->mid_emu_state = MBE_OFF;
+		}
 
-    change = buttons ^ priv->lastButtons;
-    while (change) {
-        id = ffs(change);       /* number of first set bit 1..32 is returned */
-        change &= ~(1 << (id - 1));
-        xf86PostButtonEvent(pInfo->dev, FALSE, id, (buttons & (1 << (id - 1))),
-                            0, 0);
-    }
+		change = buttons ^ priv->lastButtons;
+		while (change) {
+			id = ffs(change);       /* number of first set bit 1..32 is returned */
+			change &= ~(1 << (id - 1));
+			xf86PostButtonEvent(pInfo->dev, FALSE, id, (buttons & (1 << (id - 1))),
+								0, 0);
+		}
+	}
 
     if (priv->has_scrollbuttons)
         delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay);
